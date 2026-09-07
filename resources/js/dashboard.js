@@ -120,6 +120,25 @@ window.openAddModal = function() {
     document.getElementById('add-project-modal').classList.remove('hidden');
 };
 
+window.openScaffoldModal = function(projectId, projectName, framework) {
+    window.switchAddTab('scaffold');
+    const modal = document.getElementById('add-project-modal');
+    if (modal) modal.classList.remove('hidden');
+
+    if (projectName) {
+        const nameInput = document.getElementById('scaffold_name');
+        if (nameInput) {
+            nameInput.value = projectName;
+        }
+    }
+
+    if (framework && typeof window.selectScaffoldTemplate === 'function') {
+        window.selectScaffoldTemplate(framework);
+    }
+
+    window.__scaffoldTargetProjectId = projectId || null;
+};
+
 window.pickExistingFolder = async function() {
     const btn = document.getElementById('btn-pick-existing');
     if (btn) btn.disabled = true;

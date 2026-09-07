@@ -522,21 +522,21 @@ Berikut adalah tahapan eksekusi menyeluruh yang dibagi menjadi 5 Milestone terst
 ### Milestone 2: Lifecycle Progress Card, Assistant Memory & Session Management
 *Fokus: Menghubungkan ruang diskusi Asisten AI langsung ke kartu Dashboard dengan indikator progres 4 tahap, efisiensi RAM chat, dan manajemen sesi.*
 
-- [ ] `TASK-M2-01`: Tambahkan tombol aksi di ruang chat Asisten AI: `[ + Jadikan Proyek di Dashboard ]` setelah konsep sistem disepakati (Bagian 2.1.2).
-- [ ] `TASK-M2-02`: Dukungan status `draft` / `uninstalled` pada model `Project` untuk proyek yang baru berupa ide dokumen tanpa folder fisik (Bagian 2.1.2).
-- [ ] `TASK-M2-03`: Desain visual Micro-Stepper Progres (1/4 s.d 4/4) pada seluruh kartu Dashboard (Hero Card, Grid Cards, dan List View) (Bagian 2.1).
-- [ ] `TASK-M2-04`: Logika Cerdas Tombol Aksi Dinamis (*Smart Decision Engine*):
+- [x] `TASK-M2-01`: Tambahkan tombol aksi di ruang chat Asisten AI: `[ + Jadikan Proyek di Dashboard ]` setelah konsep sistem disepakati (Bagian 2.1.2).
+- [x] `TASK-M2-02`: Dukungan status `draft` / `uninstalled` pada model `Project` untuk proyek yang baru berupa ide dokumen tanpa folder fisik (Bagian 2.1.2).
+- [x] `TASK-M2-03`: Desain visual Micro-Stepper Progres (1/4 s.d 4/4) pada seluruh kartu Dashboard (Hero Card, Grid Cards, dan List View) (Bagian 2.1).
+- [x] `TASK-M2-04`: Logika Cerdas Tombol Aksi Dinamis (*Smart Decision Engine*):
   - Progres 1/4 (Ide & Dokumen Fitur) ➜ `[ Rancang Dokumen ERD → ]`
   - Progres 2/4 (Dokumen ERD Siap) ➜ `[ Buat & Instal Proyek Ini → ]`
   - Progres 3/4 (Proyek Terpasang) ➜ `[ Injeksi Kode Migrasi → ]`
   - Progres 4/4 (Kode Terinjeksi / Selesai) ➜ `[ Buka di VS Code → ]` (Bagian 2.3.B).
-- [ ] `TASK-M2-05`: Tombol pintasan `[ ⚡ Instal Proyek Ini ]` yang membuka modal scaffold dengan nama proyek dan framework terisi otomatis dari dokumen arsitektur dan skema ERD (Bagian 2.1.4).
-- [ ] `TASK-M2-06`: Implementasi Lazy Loading Chat (Pagination 25 pesan + tombol *"Muat 20 Pesan Sebelumnya"*) pada `DocChatController` dan `doc-assistant.js` untuk menjaga RAM WebView2 tetap ringan (< 90 MB) (Bagian 2.5.B).
-- [ ] `TASK-M2-07`: Arsitektur Memori 3 Lapis (Three-Tier Memory): Dukungan Rolling Context Summary & SSOT Canvas Injection di `DocChatJob` untuk mencegah AI Amnesia dan lonjakan token pada diskusi panjang (Bagian 2.5.A).
-- [ ] `TASK-M2-08`: Fitur *"Arsipkan Obrolan" / "Mulai Topik Baru"* di ruang Asisten AI (`/assistant`) agar pengguna dapat memulai diskusi babak baru dengan chat log bersih tanpa menghilangkan draf dokumen yang tersimpan di Canvas (Bagian 2.5.C.1).
-- [ ] `TASK-M2-09`: Fitur *"Ekspor Transkrip Diskusi (.md)"* untuk mengunduh rekaman tanya-jawab sesi brainstorming ke file Markdown lokal sebelum diarsipkan (Bagian 2.5.C.2).
-- [ ] `TASK-M2-10`: Deteksi Revisi Skema & Badge Status `● Perlu Injeksi Ulang` beserta tombol aksi dinamis `[ Update & Injeksi Ulang → ]` saat ERD diperbarui setelah proyek terinstal (Bagian 2.3 Skenario 4).
-- [ ] `TASK-M2-11`: Peluncur Terminal Interaktif (*Smart Terminal Launcher*) pada kartu Dashboard: tombol `[ 💻 Buka Terminal ]` yang mendeteksi Windows Terminal (`wt.exe`) atau PowerShell dengan folder kerja proyek aktif (Bagian 8.7.3).
+- [x] `TASK-M2-05`: Tombol pintasan `[ ⚡ Instal Proyek Ini ]` yang membuka modal scaffold dengan nama proyek dan framework terisi otomatis dari dokumen arsitektur dan skema ERD (Bagian 2.1.4).
+- [x] `TASK-M2-06`: Implementasi Lazy Loading Chat (Pagination 25 pesan + tombol *"Muat 20 Pesan Sebelumnya"*) pada `DocChatController` dan `doc-assistant.js` untuk menjaga RAM WebView2 tetap ringan (< 90 MB) (Bagian 2.5.B).
+- [x] `TASK-M2-07`: Arsitektur Memori 3 Lapis (Three-Tier Memory): Dukungan Rolling Context Summary & SSOT Canvas Injection di `DocChatJob` untuk mencegah AI Amnesia dan lonjakan token pada diskusi panjang (Bagian 2.5.A).
+- [x] `TASK-M2-08`: Fitur *"Arsipkan Obrolan" / "Mulai Topik Baru"* di ruang Asisten AI (`/assistant`) agar pengguna dapat memulai diskusi babak baru dengan chat log bersih tanpa menghilangkan draf dokumen yang tersimpan di Canvas (Bagian 2.5.C.1).
+- [x] `TASK-M2-09`: Fitur *"Ekspor Transkrip Diskusi (.md)"* untuk mengunduh rekaman tanya-jawab sesi brainstorming ke file Markdown lokal sebelum diarsipkan (Bagian 2.5.C.2).
+- [x] `TASK-M2-10`: Deteksi Revisi Skema & Badge Status `● Perlu Injeksi Ulang` beserta tombol aksi dinamis `[ Update & Injeksi Ulang → ]` saat ERD diperbarui setelah proyek terinstal (Bagian 2.3 Skenario 4).
+- [x] `TASK-M2-11`: Peluncur Terminal Interaktif (*Smart Terminal Launcher*) pada kartu Dashboard: tombol `[ 💻 Buka Terminal ]` yang mendeteksi Windows Terminal (`wt.exe`) atau PowerShell dengan folder kerja proyek aktif (Bagian 8.7.3).
 
 ---
 

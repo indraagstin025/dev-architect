@@ -16,12 +16,12 @@ return new class extends Migration
             $table->foreignUuid('project_id')->constrained('projects')->cascadeOnDelete();
             $table->text('prompt_text');
             $table->text('erd_mermaid_text')->nullable();
-            $table->jsonb('migration_files')->nullable();
-            $table->string('status')->default('draft'); // draft | injected
+            $table->json('migration_files')->nullable();
+            $table->string('status')->default('draft')->index(); // draft | injected
             $table->string('target_version')->default('13');
             $table->string('ai_driver')->default('openrouter'); // openrouter | openai | ollama
             $table->string('database_dialect')->default('mysql'); // mysql | pgsql | sqlite | sqlsrv
-            $table->string('target_framework')->default('laravel'); // laravel | express_prisma | express_drizzle | springboot_hibernate | raw_sql
+            $table->string('target_framework')->default('laravel')->index(); // laravel | express_prisma | express_drizzle | springboot_hibernate | raw_sql
             $table->timestamps();
         });
     }

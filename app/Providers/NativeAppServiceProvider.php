@@ -17,14 +17,26 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function boot(): void
     {
-        // 1. Konfigurasi Jendela Utama Aplikasi Desktop
+        // 0. Auto-healing Database Migration untuk runtime NativePHP
+        if (!\Illuminate\Support\Facades\Schema::hasTable('projects')) {
+            \Illuminate\Support\Facades\Artisan::call('native:migrate', ['--force' => true]);
+        }
+
+        // 1. Konfigurasi Jendela Utama Aplikasi Desktop (Frameless Modern Shell)
         Window::open('main')
             ->title('DEVArchitect - Universal AI Database Architect')
+            ->url(url('/assistant'))
             ->width(1360)
             ->height(860)
-            ->minWidth(1024)
-            ->minHeight(700)
-            ->rememberState();
+            ->minWidth(480)
+            ->minHeight(500)
+            ->frameless()      // 👈 Menghapus border bawaan OS
+            ->hideMenu(true)       // 👈 Menghilangkan menu bar atas
+            ->hasShadow(false)
+            ->backgroundColor('#0c0c0e');
+
+        // ⚠️ Tetap matikan ini selama pengetesan pertama
+        // ->rememberState() 
 
         // 2. Registrasi Hotkey Global (Ctrl+Alt+A)
         GlobalShortcut::key('Control+Alt+A')

@@ -154,7 +154,9 @@ return [
         'default' => [
             'queues' => ['default'],
             'memory_limit' => 128,
-            'timeout' => 60,
+            // 900 dtk: scaffold (composer/npm) bisa bermenit-menit.
+            // Selaraskan DB_QUEUE_RETRY_AFTER di atas timeout job terlama (600).
+            'timeout' => 900,
             'sleep' => 3,
         ],
     ],

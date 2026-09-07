@@ -174,6 +174,12 @@ class ProjectController extends Controller
         // Catatan: escapeshellarg() menghasilkan single-quote yang tidak
         // dikenali cmd.exe, jadi path diapit double-quote secara eksplisit
         // agar direktori berekstensi spasi tetap terbuka dengan benar.
+        $hasWt = false;
+        @exec('where.exe wt.exe 2>NUL', $wtOut, $wtCode);
+        if ($wtCode === 0 && !empty($wtOut)) {
+            $hasWt = true;
+        }
+
         $quoted = '"' . $path . '"';
         $editorConfigs = [
             'explorer' => [
@@ -191,6 +197,10 @@ class ProjectController extends Controller
             'antigravity' => [
                 'name' => 'Antigravity IDE',
                 'cmd' => 'agy ' . $quoted,
+            ],
+            'terminal' => [
+                'name' => 'Terminal',
+                'cmd' => $hasWt ? 'wt.exe -d ' . $quoted : 'powershell.exe -NoExit -Command "Set-Location ' . $quoted . '"',
             ],
         ];
 
@@ -212,7 +222,11 @@ class ProjectController extends Controller
             }
 
             // Eksekusi non-blocking di Windows
-            pclose(popen("start /B {$targetConfig['cmd']}", 'r'));
+            if ($target === 'terminal') {
+                pclose(popen("start {$targetConfig['cmd']}", 'r'));
+            } else {
+                pclose(popen("start /B {$targetConfig['cmd']}", 'r'));
+            }
 
             return response()->json([
                 'success' => true,

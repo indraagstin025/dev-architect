@@ -20,6 +20,19 @@ enum DatabaseDialect: string
     }
 
     /**
+     * Nama provider resmi yang valid untuk Prisma schema.
+     */
+    public function prismaProvider(): string
+    {
+        return match ($this) {
+            self::MYSQL => 'mysql',
+            self::POSTGRESQL => 'postgresql',
+            self::SQLITE => 'sqlite',
+            self::SQLSERVER => 'sqlserver',
+        };
+    }
+
+    /**
      * Panduan tipe data spesifik untuk prompt AI.
      */
     public function promptGuidelines(): string

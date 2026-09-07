@@ -27,6 +27,7 @@ class Project extends Model
         'project_name',
         'absolute_path',
         'framework_type',
+        'database_dialect',
     ];
 
     /**
@@ -38,6 +39,7 @@ class Project extends Model
     {
         return [
             'framework_type' => \App\Enums\TargetFramework::class,
+            'database_dialect' => \App\Enums\DatabaseDialect::class,
         ];
     }
 

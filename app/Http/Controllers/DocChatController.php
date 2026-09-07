@@ -57,11 +57,178 @@ class DocChatController extends Controller
     public function show(string $id): JsonResponse
     {
         $project = DocProject::with([
-            'messages' => fn ($q) => $q->orderBy('created_at')->limit(200),
             'versions' => fn ($q) => $q->orderBy('created_at'),
+            'codeProject',
         ])->findOrFail($id);
 
-        return response()->json(['success' => true, 'data' => $project]);
+        // TASK-M2-06: Hanya ambil 25 pesan aktif terbaru (diurutkan kronologis)
+        $messagesQuery = $project->messages()->where('is_archived', false);
+        $totalActive = $messagesQuery->count();
+
+        $messages = (clone $messagesQuery)
+            ->reorder('created_at', 'desc')
+            ->limit(25)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $projectData = $project->toArray();
+        $projectData['messages'] = $messages;
+        $projectData['has_more_messages'] = $totalActive > 25;
+        $projectData['total_messages'] = $totalActive;
+        $projectData['messages_pagination'] = [
+            'has_more' => $totalActive > 25,
+            'oldest_id' => $messages->first()?->id,
+            'total' => $totalActive,
+        ];
+
+        return response()->json(['success' => true, 'data' => $projectData]);
+    }
+
+    /**
+     * Mengambil riwayat pesan obrolan dengan cursor pagination (TASK-M2-06).
+     */
+    public function getMessages(\Illuminate\Http\Request $request, string $id): JsonResponse
+    {
+        $project = DocProject::findOrFail($id);
+        $limit = min((int) $request->input('limit', 20), 50);
+        $beforeId = $request->input('before_id');
+
+        $query = $project->messages()->where('is_archived', false);
+
+        if ($beforeId) {
+            $reference = DocMessage::find($beforeId);
+            if ($reference) {
+                $query->where('created_at', '<', $reference->created_at);
+            }
+        }
+
+        $messages = $query->reorder('created_at', 'desc')
+            ->limit($limit)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $oldestMessage = $messages->first();
+        $hasMore = false;
+        if ($oldestMessage) {
+            $hasMore = $project->messages()
+                ->where('is_archived', false)
+                ->where('created_at', '<', $oldestMessage->created_at)
+                ->exists();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'success' => true,
+            'data' => $messages,
+            'has_more' => $hasMore,
+            'oldest_id' => $oldestMessage?->id,
+            'count' => $messages->count(),
+        ]);
+    }
+
+    /**
+     * Menerbitkan kartu proyek tahap awal (Draft Ide 1/4) di Dashboard (TASK-M2-01 & TASK-M2-02).
+     */
+    public function createDashboardProject(string $id): JsonResponse
+    {
+        $docProject = DocProject::findOrFail($id);
+
+        if ($docProject->code_project_id) {
+            $existing = \App\Models\Project::find($docProject->code_project_id);
+            if ($existing) {
+                \App\Models\AppSetting::set('active_project_id', $existing->id);
+
+                return response()->json([
+                    'status' => 'success',
+                    'success' => true,
+                    'message' => "Proyek [{$existing->project_name}] sudah terdaftar di Dashboard.",
+                    'data' => $existing,
+                ], 200);
+            }
+        }
+
+        $framework = $docProject->target_framework ?: 'laravel';
+        if (! in_array($framework, ['laravel', 'express_prisma', 'express_drizzle', 'springboot_hibernate', 'raw_sql'])) {
+            $framework = 'laravel';
+        }
+
+        $name = \Illuminate\Support\Str::slug($docProject->title);
+        if (empty($name)) {
+            $name = 'proyek-' . substr($docProject->id, 0, 8);
+        }
+
+        // Hindari duplikasi nama proyek
+        $baseName = $name;
+        $counter = 1;
+        while (\App\Models\Project::where('project_name', $name)->exists()) {
+            $name = $baseName . '-' . $counter;
+            $counter++;
+        }
+
+        $project = \App\Models\Project::create([
+            'project_name' => $name,
+            'absolute_path' => null, // Draft virtual tanpa folder fisik
+            'framework_type' => $framework,
+            'is_draft' => true,
+            'doc_project_id' => $docProject->id,
+        ]);
+
+        $docProject->update(['code_project_id' => $project->id]);
+        \App\Models\AppSetting::set('active_project_id', $project->id);
+
+        return response()->json([
+            'status' => 'success',
+            'success' => true,
+            'message' => "Konsep '{$docProject->title}' berhasil diterbitkan sebagai Proyek di Dashboard!",
+            'data' => $project,
+        ], 201);
+    }
+
+    /**
+     * Mengarsipkan obrolan saat ini untuk memulai topik baru (TASK-M2-08).
+     */
+    public function archiveChat(string $id): JsonResponse
+    {
+        $docProject = DocProject::findOrFail($id);
+        $count = $docProject->archiveCurrentChat();
+
+        return response()->json([
+            'status' => 'success',
+            'success' => true,
+            'message' => "Sesi obrolan berhasil diarsipkan ({$count} pesan). Anda dapat memulai topik diskusi baru tanpa kehilangan draf Canvas.",
+            'data' => [
+                'archived_count' => $count,
+                'doc_project' => $docProject->fresh(),
+            ],
+        ]);
+    }
+
+    /**
+     * Mengunduh transkrip diskusi dalam format Markdown (TASK-M2-09).
+     */
+    public function exportTranscript(string $id): \Symfony\Component\HttpFoundation\Response
+    {
+        $docProject = DocProject::findOrFail($id);
+        $markdown = $docProject->getTranscriptMarkdown();
+        $filename = \Illuminate\Support\Str::slug($docProject->title) . '-transcript-' . date('Ymd-His') . '.md';
+
+        if (request()->wantsJson() || request()->header('Accept') === 'application/json' || request()->is('api/*')) {
+            return response()->json([
+                'status' => 'success',
+                'success' => true,
+                'data' => [
+                    'filename' => $filename,
+                    'transcript_md' => $markdown,
+                ],
+            ]);
+        }
+
+        return response($markdown, 200, [
+            'Content-Type' => 'text/markdown; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 
     public function update(\Illuminate\Http\Request $request, string $id): JsonResponse

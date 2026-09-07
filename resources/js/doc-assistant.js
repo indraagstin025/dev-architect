@@ -292,6 +292,7 @@ export async function selectDocProject(id) {
         syncCodeProjectPicker();
         syncGenType();
         updateMenuArchiveLabel();
+        updatePromoteDashboardButton();
 
         // If versions exist, select latest active version in Canvas
         if (docVersions.length) {
@@ -310,6 +311,36 @@ export async function selectDocProject(id) {
             document.getElementById('chat-messages').classList.add('hidden');
         }
     } catch (e) {}
+}
+
+function updatePromoteDashboardButton() {
+    const btn = document.getElementById('btn-promote-dashboard');
+    const menuTxt = document.getElementById('menu-promote-dashboard-text');
+    if (!btn) return;
+
+    if (docProject && docProject.code_project_id) {
+        btn.classList.remove('hidden');
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>✓ Terdaftar di Dashboard</span>
+        `;
+        btn.title = 'Proyek draft ini sudah terdaftar di Dashboard. Klik untuk melihat detail atau membuka Dashboard.';
+        btn.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 text-xs font-semibold transition-all shadow-2xs cursor-pointer';
+        if (menuTxt) menuTxt.textContent = 'Lihat Proyek di Dashboard';
+    } else {
+        btn.classList.remove('hidden');
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>+ Jadikan Proyek di Dashboard</span>
+        `;
+        btn.title = 'Jadikan ide ini sebagai Proyek di Dashboard (Bisa diinstal kapan saja)';
+        btn.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition-all shadow-2xs cursor-pointer';
+        if (menuTxt) menuTxt.textContent = 'Jadikan Proyek di Dashboard';
+    }
 }
 
 function updateMenuArchiveLabel() {
@@ -484,24 +515,73 @@ export async function createDashboardProject() {
         return;
     }
 
+    // Jika sudah pernah diterbitkan ke Dashboard, langsung tampilkan modal info
+    if (docProject && docProject.code_project_id) {
+        const pop = document.getElementById('project-menu-pop');
+        if (pop) pop.classList.add('hidden');
+        openPromoteDashboardModal(docProject.code_project || {
+            project_name: docProject.title,
+            framework_type: docProject.target_framework || 'laravel',
+        });
+        return;
+    }
+
+    const btn = document.getElementById('btn-promote-dashboard');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></span> <span>Menerbitkan...</span>`;
+    }
+
     try {
         const res = await window.api(`/api/docs/projects/${docProjectId}/create-dashboard-project`, {
             method: 'POST'
         });
 
-        if (res.status === 'success') {
-            window.toast(res.message || 'Proyek draft berhasil dibuat di Dashboard!', 'success');
+        if (res.status === 'success' && res.data) {
+            docProject.code_project_id = res.data.id;
+            docProject.code_project = res.data;
+            updatePromoteDashboardButton();
+
             const pop = document.getElementById('project-menu-pop');
             if (pop) pop.classList.add('hidden');
-            const go = confirm('Proyek draft berhasil didaftarkan di Dashboard! Apakah Anda ingin membuka Dashboard sekarang?');
-            if (go) {
-                window.location.href = '/';
-            }
+
+            window.toast(res.message || 'Proyek draft berhasil dibuat di Dashboard!', 'success');
+            openPromoteDashboardModal(res.data);
         } else {
             window.toast(res.message || 'Gagal membuat proyek di Dashboard', 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
         }
     } catch (e) {
         window.toast('Terjadi kesalahan saat membuat proyek di Dashboard.', 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+}
+
+export function openPromoteDashboardModal(project) {
+    const modal = document.getElementById('promote-dashboard-modal');
+    if (!modal) return;
+    const nameEl = document.getElementById('promote-modal-project-name');
+    const fwEl = document.getElementById('promote-modal-framework');
+    if (nameEl) {
+        nameEl.textContent = project?.project_name || docProject?.title || '-';
+    }
+    if (fwEl) {
+        fwEl.textContent = (project?.framework_type || docProject?.target_framework || 'laravel').toUpperCase();
+    }
+    modal.classList.remove('hidden');
+}
+
+export function closePromoteDashboardModal() {
+    const modal = document.getElementById('promote-dashboard-modal');
+    if (modal) {
+        modal.classList.add('hidden');
     }
 }
 
@@ -1306,6 +1386,8 @@ window.deleteDocProject = deleteDocProject;
 window.ackPrivacy = ackPrivacy;
 window.loadOlderMessages = loadOlderMessages;
 window.createDashboardProject = createDashboardProject;
+window.openPromoteDashboardModal = openPromoteDashboardModal;
+window.closePromoteDashboardModal = closePromoteDashboardModal;
 window.archiveDocChatSession = archiveDocChatSession;
 window.exportDocTranscript = exportDocTranscript;
 

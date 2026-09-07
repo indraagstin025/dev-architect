@@ -29,3 +29,5 @@ database/*.sqlite
 database/*.sqlite-wal
 database/*.sqlite-shm
 *.sqlite
+install_vs_buildtools.exe
+scratch/

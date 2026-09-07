@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+    <defs>
+        <linearGradient id="ag-grad-file" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#A855F7"/>
+            <stop offset="50%" stop-color="#3B82F6"/>
+            <stop offset="100%" stop-color="#10B981"/>
+        </linearGradient>
+        <linearGradient id="ag-ring-grad-file" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#38BDF8"/>
+            <stop offset="100%" stop-color="#EC4899"/>
+        </linearGradient>
+    </defs>
+    <circle cx="12" cy="12" r="9.5" fill="#09090B" stroke="url(#ag-grad-file)" stroke-width="1.8"/>
+    <ellipse cx="12" cy="12" rx="9" ry="3.8" stroke="url(#ag-ring-grad-file)" stroke-width="1.4" transform="rotate(-28 12 12)"/>
+    <circle cx="12" cy="12" r="2.8" fill="#FFFFFF"/>
+    <circle cx="12" cy="12" r="1.5" fill="#3B82F6"/>
+</svg>

@@ -1,0 +1,49 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "DEVArchitect",
+  "version": "2.0.0",
+  "identifier": "com.devarchitect.app",
+  "build": {
+    "frontendDist": "../public",
+    "devUrl": "http://127.0.0.1:8000/assistant",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "DEVArchitect - Universal AI Database Architect",
+        "width": 1360,
+        "height": 860,
+        "minWidth": 480,
+        "minHeight": 500,
+        "decorations": false,
+        "transparent": false,
+        "shadow": true,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "dialog": null,
+    "process": null
+  }
+}

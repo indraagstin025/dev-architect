@@ -34,6 +34,10 @@ class Generation extends Model
         'ai_driver',
         'database_dialect',
         'target_framework',
+        'doc_version_id',
+        'job_status',
+        'job_error',
+        'job_warnings',
     ];
 
     /**
@@ -45,6 +49,7 @@ class Generation extends Model
     {
         return [
             'migration_files' => 'array',
+            'job_warnings' => 'array',
             'status' => GenerationStatus::class,
             'database_dialect' => \App\Enums\DatabaseDialect::class,
             'target_framework' => \App\Enums\TargetFramework::class,

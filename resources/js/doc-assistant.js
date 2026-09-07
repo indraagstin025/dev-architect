@@ -32,6 +32,9 @@ let liveModels = [];
 let sectionsMap = {};
 let isCanvasOpen = false;
 let currentCanvasTab = 'preview';
+let oldestMessageId = null;
+let hasMoreMessages = false;
+let isLoadingOlder = false;
 
 export function esc(s) {
     const d = document.createElement('div');
@@ -278,6 +281,10 @@ export async function selectDocProject(id) {
         docProject = res.data;
         docVersions = docProject.versions || [];
 
+        const pagination = docProject.messages_pagination || {};
+        hasMoreMessages = !!pagination.has_more;
+        oldestMessageId = pagination.oldest_id || (docProject.messages && docProject.messages.length ? docProject.messages[0].id : null);
+
         renderStagePipeline();
         renderMessages(docProject.messages || []);
         updateCanvasBadge();
@@ -309,6 +316,13 @@ function updateMenuArchiveLabel() {
     const lbl = document.getElementById('menu-archive-text');
     if (lbl) {
         lbl.textContent = docProject?.status === 'archived' ? 'Buka dari Arsip' : 'Arsipkan Proyek';
+    }
+}
+
+function updateLoadMoreButton() {
+    const container = document.getElementById('load-more-messages-container');
+    if (container) {
+        container.classList.toggle('hidden', !hasMoreMessages);
     }
 }
 
@@ -345,63 +359,199 @@ function renderAssistantContent(m, pending) {
     return md(m.content);
 }
 
-function renderMessages(messages) {
-    const box = document.getElementById('chat-messages');
+function createMessageElement(m) {
+    const wrap = document.createElement('div');
+    wrap.className = 'w-full flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start');
+    const pending = (m.job_status === 'queued' || m.job_status === 'processing');
+
+    if (m.role === 'user') {
+        // User message bubble (ChatGPT / Gemini style: snug right-aligned pill, fluid)
+        wrap.innerHTML = `
+            <div class="w-fit max-w-[85%] sm:max-w-xl md:max-w-2xl ml-auto rounded-3xl rounded-br-sm px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs sm:text-sm leading-relaxed border border-zinc-200/50 dark:border-zinc-700/40 shadow-2xs">
+                ${esc(m.content)}
+            </div>
+        `;
+    } else {
+        // Assistant message (Fluid width, prose style with star badge & action buttons)
+        wrap.innerHTML = `
+            <div class="w-full flex gap-3 max-w-full">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-teal-500/20 to-blue-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-500 text-xs shrink-0 shadow-2xs mt-0.5">
+                    <svg class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0 space-y-2">
+                    <div class="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed select-text">
+                        ${renderAssistantContent(m, pending)}
+                    </div>
+                    ${!pending && m.content ? `
+                        <div class="flex items-center gap-2 pt-1.5 flex-wrap">
+                            <button type="button" onclick="snapshotFromMessage('${m.id}')" class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 flex items-center gap-1.5 transition-colors shadow-2xs">
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>Buka di Canvas</span>
+                            </button>
+                            <button type="button" onclick="copyMessageText(this)" data-content="${encodeURIComponent(m.content)}" class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 transition-colors shadow-2xs">
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                <span>Salin</span>
+                            </button>
+                            ${tokenFooter(m)}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+    wrap.dataset.messageId = m.id;
+    return wrap;
+}
+
+function renderMessages(messages, shouldScroll = true) {
+    const box = document.getElementById('chat-messages-stream') || document.getElementById('chat-messages');
     box.innerHTML = '';
     
     messages.forEach((m) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'w-full flex ' + (m.role === 'user' ? 'justify-end' : 'justify-start');
-        const pending = (m.job_status === 'queued' || m.job_status === 'processing');
-
-        if (m.role === 'user') {
-            // User message bubble (ChatGPT / Gemini style: snug right-aligned pill, fluid)
-            wrap.innerHTML = `
-                <div class="w-fit max-w-[85%] sm:max-w-xl md:max-w-2xl ml-auto rounded-3xl rounded-br-sm px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs sm:text-sm leading-relaxed border border-zinc-200/50 dark:border-zinc-700/40 shadow-2xs">
-                    ${esc(m.content)}
-                </div>
-            `;
-        } else {
-            // Assistant message (Fluid width, prose style with star badge & action buttons)
-            wrap.innerHTML = `
-                <div class="w-full flex gap-3 max-w-full">
-                    <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-teal-500/20 to-blue-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-500 text-xs shrink-0 shadow-2xs mt-0.5">
-                        <svg class="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0 space-y-2">
-                        <div class="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed select-text">
-                            ${renderAssistantContent(m, pending)}
-                        </div>
-                        ${!pending && m.content ? `
-                            <div class="flex items-center gap-2 pt-1.5 flex-wrap">
-                                <button type="button" onclick="snapshotFromMessage('${m.id}')" class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 flex items-center gap-1.5 transition-colors shadow-2xs">
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                    </svg>
-                                    <span>Buka di Canvas</span>
-                                </button>
-                                <button type="button" onclick="copyMessageText(this)" data-content="${encodeURIComponent(m.content)}" class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1.5 transition-colors shadow-2xs">
-                                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span>Salin</span>
-                                </button>
-                                ${tokenFooter(m)}
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }
-        wrap.dataset.messageId = m.id;
-        box.appendChild(wrap);
+        box.appendChild(createMessageElement(m));
     });
 
+    updateLoadMoreButton();
+
+    if (shouldScroll) {
+        const scrollContainer = document.getElementById('chat-scroll-container');
+        if (scrollContainer) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+    }
+}
+
+// ---------------- LAZY LOAD MESSAGES (TASK-M2-06) ----------------
+export async function loadOlderMessages() {
+    if (!docProjectId || !oldestMessageId || isLoadingOlder) return;
+    isLoadingOlder = true;
+    const btn = document.getElementById('btn-load-more-messages');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="w-3 h-3 border-2 border-zinc-400 border-t-zinc-700 dark:border-t-zinc-200 rounded-full animate-spin"></span> <span>Memuat pesan sebelumnya...</span>`;
+    }
+
     const scrollContainer = document.getElementById('chat-scroll-container');
-    if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    const prevScrollHeight = scrollContainer ? scrollContainer.scrollHeight : 0;
+    const prevScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
+    try {
+        const res = await window.api(`/api/docs/projects/${docProjectId}/messages?before_id=${oldestMessageId}&limit=20`);
+        const older = res.data || [];
+        hasMoreMessages = !!res.has_more;
+        if (res.oldest_id) {
+            oldestMessageId = res.oldest_id;
+        } else if (older.length > 0) {
+            oldestMessageId = older[0].id;
+        }
+
+        const box = document.getElementById('chat-messages-stream') || document.getElementById('chat-messages');
+        // Older messages come ordered chronologically (oldest to newest among the slice)
+        // We prepend them before the current first message element
+        older.slice().reverse().forEach((m) => {
+            const el = createMessageElement(m);
+            box.insertBefore(el, box.firstChild);
+        });
+
+        updateLoadMoreButton();
+
+        // Maintain user view position
+        if (scrollContainer) {
+            const newScrollHeight = scrollContainer.scrollHeight;
+            scrollContainer.scrollTop = (newScrollHeight - prevScrollHeight) + prevScrollTop;
+        }
+    } catch (e) {
+        window.toast('Gagal memuat pesan sebelumnya.', 'error');
+    } finally {
+        isLoadingOlder = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg> <span>Muat 20 Pesan Sebelumnya</span>`;
+        }
+    }
+}
+
+// ---------------- CREATE DASHBOARD PROJECT (TASK-M2-01) ----------------
+export async function createDashboardProject() {
+    if (!docProjectId) {
+        window.toast('Pilih atau buat proyek dokumen terlebih dahulu.', 'warning');
+        return;
+    }
+
+    try {
+        const res = await window.api(`/api/docs/projects/${docProjectId}/create-dashboard-project`, {
+            method: 'POST'
+        });
+
+        if (res.status === 'success') {
+            window.toast(res.message || 'Proyek draft berhasil dibuat di Dashboard!', 'success');
+            const pop = document.getElementById('project-menu-pop');
+            if (pop) pop.classList.add('hidden');
+            const go = confirm('Proyek draft berhasil didaftarkan di Dashboard! Apakah Anda ingin membuka Dashboard sekarang?');
+            if (go) {
+                window.location.href = '/';
+            }
+        } else {
+            window.toast(res.message || 'Gagal membuat proyek di Dashboard', 'error');
+        }
+    } catch (e) {
+        window.toast('Terjadi kesalahan saat membuat proyek di Dashboard.', 'error');
+    }
+}
+
+// ---------------- ARCHIVE CHAT SESSION (TASK-M2-08) ----------------
+export async function archiveDocChatSession() {
+    if (!docProjectId) return;
+    const ok = confirm('Arsipkan seluruh obrolan saat ini? Pesan obrolan akan disimpan ke arsip dan tampilan obrolan dimulai baru, namun seluruh versi dokumen pada Lembar Dokumen (Canvas) tetap aman tersimpan.');
+    if (!ok) return;
+
+    try {
+        const res = await window.api(`/api/docs/projects/${docProjectId}/archive-chat`, {
+            method: 'POST'
+        });
+
+        if (res.status === 'success') {
+            window.toast(res.message || 'Sesi obrolan berhasil diarsipkan.', 'success');
+            const pop = document.getElementById('project-menu-pop');
+            if (pop) pop.classList.add('hidden');
+            await selectDocProject(docProjectId);
+        } else {
+            window.toast(res.message || 'Gagal mengarsipkan obrolan.', 'error');
+        }
+    } catch (e) {
+        window.toast('Terjadi kesalahan saat mengarsipkan obrolan.', 'error');
+    }
+}
+
+// ---------------- EXPORT TRANSCRIPT (TASK-M2-09) ----------------
+export async function exportDocTranscript() {
+    if (!docProjectId) return;
+    try {
+        const res = await window.api(`/api/docs/projects/${docProjectId}/export-transcript`);
+        if (res.status === 'success' && res.data) {
+            const blob = new Blob([res.data.transcript_md], { type: 'text/markdown;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = res.data.filename || `transcript-${docProjectId}.md`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            window.toast('Transkrip obrolan berhasil diunduh.', 'success');
+            const pop = document.getElementById('project-menu-pop');
+            if (pop) pop.classList.add('hidden');
+        } else {
+            window.toast('Gagal mengekspor transkrip.', 'error');
+        }
+    } catch (e) {
+        window.toast('Terjadi kesalahan saat mengekspor transkrip.', 'error');
     }
 }
 
@@ -1154,6 +1304,10 @@ window.toggleProjectMenu = toggleProjectMenu;
 window.archiveDocProject = archiveDocProject;
 window.deleteDocProject = deleteDocProject;
 window.ackPrivacy = ackPrivacy;
+window.loadOlderMessages = loadOlderMessages;
+window.createDashboardProject = createDashboardProject;
+window.archiveDocChatSession = archiveDocChatSession;
+window.exportDocTranscript = exportDocTranscript;
 
 // Click outside handler for project menu
 document.addEventListener('click', (e) => {

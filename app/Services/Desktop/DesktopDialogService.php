@@ -8,7 +8,7 @@ use Native\Desktop\Dialog;
 class DesktopDialogService
 {
     public function __construct(
-        protected ProjectService $projectService = new ProjectService()
+        protected ProjectService $projectService
     ) {}
 
     /**
@@ -19,8 +19,9 @@ class DesktopDialogService
      *     path: ?string,
      *     valid: bool,
      *     message: string,
-     *     framework?: \App\Enums\TargetFramework,
-     *     project_name?: string
+     *     framework?: ?string,
+     *     framework_label?: ?string,
+     *     project_name?: ?string
      * }
      */
     public function pickProjectFolder(?string $defaultPath = null): array
@@ -28,7 +29,7 @@ class DesktopDialogService
         $dialog = Dialog::new()
             ->title('Pilih Direktori Proyek Backend')
             ->button('Pilih Folder Ini')
-            ->folders(); // Khusus direktori
+            ->folders();
 
         if (!empty($defaultPath)) {
             $dialog->defaultPath($defaultPath);
@@ -47,12 +48,20 @@ class DesktopDialogService
             ];
         }
 
-        // Validasi dan deteksi tipe framework
+        // Validasi dan deteksi tipe framework & dialek database
         $validation = $this->projectService->validateFolder($selectedPath);
+        $framework = $validation['framework'] ?? null;
 
-        return array_merge([
+        return [
             'cancelled' => false,
             'path' => $selectedPath,
-        ], $validation);
+            'valid' => $validation['valid'],
+            'message' => $validation['message'],
+            'project_name' => $validation['project_name'],
+            'framework' => $framework?->value,
+            'framework_label' => $framework?->label(),
+            'dialect' => $validation['dialect'] ?? null,
+            'dialect_label' => $validation['dialect_label'] ?? null,
+        ];
     }
 }

@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\ToggleWindowVisibility::class,
+            \App\Listeners\ShowMainWindow::class,
+        );
     }
 }

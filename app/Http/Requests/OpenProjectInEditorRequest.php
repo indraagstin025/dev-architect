@@ -15,7 +15,7 @@ class OpenProjectInEditorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'target' => ['required', 'string', Rule::in(['explorer', 'vscode', 'zed', 'antigravity'])],
+            'target' => ['required', 'string', Rule::in(['explorer', 'vscode', 'zed', 'antigravity', 'terminal'])],
         ];
     }
 }

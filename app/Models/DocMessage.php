@@ -21,6 +21,7 @@ class DocMessage extends Model
         'ai_model',
         'job_status',
         'job_error',
+        'is_archived',
         'prompt_tokens',
         'completion_tokens',
     ];
@@ -28,6 +29,7 @@ class DocMessage extends Model
     protected function casts(): array
     {
         return [
+            'is_archived' => 'boolean',
             'prompt_tokens' => 'integer',
             'completion_tokens' => 'integer',
         ];

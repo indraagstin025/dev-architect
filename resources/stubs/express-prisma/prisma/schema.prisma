@@ -1,0 +1,9 @@
+// Struktur awal Prisma — skema AI dari DEVArchitect akan ditambahkan ke berkas ini.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}

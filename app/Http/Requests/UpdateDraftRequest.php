@@ -14,10 +14,10 @@ class UpdateDraftRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'erd_mermaid_text' => ['nullable', 'string'],
-            'migration_files' => ['required', 'array'],
-            'migration_files.*.filename' => ['required', 'string'],
-            'migration_files.*.content' => ['required', 'string'],
+            'erd_mermaid_text' => ['nullable', 'string', 'max:50000'],
+            'migration_files' => ['required', 'array', 'max:30'],
+            'migration_files.*.filename' => ['required', 'string', 'max:120', 'regex:/^[A-Za-z0-9_\-\.]+$/'],
+            'migration_files.*.content' => ['required', 'string', 'max:200000'],
         ];
     }
 }

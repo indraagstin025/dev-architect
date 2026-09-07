@@ -558,11 +558,29 @@ class ProjectService
 
         $databaseDialect = $dialect ?? $this->detectDatabaseDialect($realPath);
 
+        // Jika sebelumnya ada kartu draft virtual dengan nama yang sama, perbarui menjadi terpasang
+        $draft = Project::where('is_draft', true)
+            ->whereNull('absolute_path')
+            ->where('project_name', $name)
+            ->first();
+
+        if ($draft) {
+            $draft->update([
+                'absolute_path' => $realPath,
+                'framework_type' => $targetFramework,
+                'database_dialect' => $databaseDialect,
+                'is_draft' => false,
+            ]);
+
+            return $draft->fresh();
+        }
+
         return Project::create([
             'project_name' => $name,
             'absolute_path' => $realPath,
             'framework_type' => $targetFramework,
             'database_dialect' => $databaseDialect,
+            'is_draft' => false,
         ]);
     }
 

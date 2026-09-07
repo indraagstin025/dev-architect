@@ -96,6 +96,10 @@ Route::prefix('api')->middleware([
     Route::post('/docs/projects/{id}/generate-doc', [DocChatController::class, 'generateDoc'])->middleware('throttle:30,1');
     Route::post('/docs/projects', [DocChatController::class, 'store']);
     Route::get('/docs/projects/{id}', [DocChatController::class, 'show']);
+    Route::get('/docs/projects/{id}/messages', [DocChatController::class, 'getMessages']);
+    Route::post('/docs/projects/{id}/create-dashboard-project', [DocChatController::class, 'createDashboardProject']);
+    Route::post('/docs/projects/{id}/archive-chat', [DocChatController::class, 'archiveChat']);
+    Route::get('/docs/projects/{id}/export-transcript', [DocChatController::class, 'exportTranscript']);
     Route::put('/docs/projects/{id}', [DocChatController::class, 'update']);
     Route::delete('/docs/projects/{id}', [DocChatController::class, 'destroy']);
     Route::post('/docs/projects/{id}/archive', [DocChatController::class, 'archive']);

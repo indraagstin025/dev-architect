@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'openrouter' => [
+        'key' => env('OPENROUTER_API_KEY'),
+        'model' => env('OPENROUTER_MODEL', 'openai/gpt-oss-120b'),
+        'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
+        'docs_key' => env('OPENROUTER_API_KEY_DOCS'),
+        'docs_model' => env('OPENROUTER_MODEL_DOCS', 'nvidia/nemotron-3.5-lightning:free'),
+        'docs_base_url' => env('OPENROUTER_BASE_URL_DOCS', 'https://openrouter.ai/api/v1'),
+    ],
+
 ];

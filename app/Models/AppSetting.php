@@ -41,40 +41,63 @@ class AppSetting extends Model
     }
 
     /**
-     * Helper to retrieve a setting value by key.
+     * Helper to retrieve a setting value by key with caching.
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $setting = static::where('key', $key)->first();
+        return \Illuminate\Support\Facades\Cache::rememberForever("setting:{$key}", function () use ($key, $default) {
+            $setting = static::where('key', $key)->first();
 
-        if (!$setting) {
-            return $default;
-        }
-
-        if ($setting->is_encrypted && !empty($setting->value)) {
-            try {
-                return decrypt($setting->value);
-            } catch (\Exception $e) {
-                return $setting->value;
+            if (!$setting) {
+                return $default;
             }
-        }
 
-        return $setting->value ?? $default;
+            if ($setting->is_encrypted && !empty($setting->value)) {
+                try {
+                    return decrypt($setting->value);
+                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                    \Illuminate\Support\Facades\Log::warning("Gagal mendekripsi setting [{$key}]: Kunci enkripsi aplikasi mungkin telah berubah.");
+                    return $default;
+                } catch (\Throwable $e) {
+                    return $default;
+                }
+            }
+
+            return $setting->value ?? $default;
+        });
     }
 
     /**
-     * Helper to save a setting key-value pair.
+     * Helper to save a setting key-value pair and clear cache.
      */
     public static function set(string $key, mixed $value, bool $encrypt = false): self
     {
         $storedValue = ($encrypt && !empty($value)) ? encrypt($value) : $value;
 
-        return static::updateOrCreate(
+        $record = static::updateOrCreate(
             ['key' => $key],
             [
                 'value' => $storedValue,
                 'is_encrypted' => $encrypt,
             ]
         );
+
+        \Illuminate\Support\Facades\Cache::forget("setting:{$key}");
+
+        return $record;
+    }
+
+    /**
+     * Mengambil atau membuat token rahasia bridge desktop untuk otentikasi API internal.
+     */
+    public static function getOrCreateDesktopBridgeKey(): string
+    {
+        $key = static::get('desktop_bridge_token');
+        if (empty($key)) {
+            $key = \Illuminate\Support\Str::random(64);
+            static::set('desktop_bridge_token', $key);
+        }
+
+        return $key;
     }
 }

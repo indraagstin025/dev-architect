@@ -52,6 +52,8 @@
                             'springboot_hibernate' => 'PostgreSQL',
                             default => 'MySQL'
                         });
+                $nextAction = $activeProject->next_action;
+                $isDraft = $activeProject->isDraft();
             @endphp
 
             <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0c0c0e] p-5 sm:p-6 shadow-xs space-y-4 transition-all">
@@ -65,22 +67,34 @@
                         <span class="text-xs text-zinc-400 dark:text-zinc-500 hidden sm:inline">• Terakhir diubah {{ $activeProject->updated_at->diffForHumans() }}</span>
                     </div>
 
-                    <!-- Secondary Actions: VS Code, Folder, More Options -->
+                    <!-- Secondary Actions: VS Code, Terminal, Folder, More Options -->
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'vscode')"
-                            class="px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                            title="Buka di VS Code">
-                            <x-icon-editor editor="vscode" />
-                            <span>VS Code</span>
-                        </button>
-                        <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'explorer')"
-                            class="px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                            title="Buka Folder di File Explorer">
-                            <svg class="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                            </svg>
-                            <span>Buka Folder</span>
-                        </button>
+                        @if(!$isDraft)
+                            <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'vscode')"
+                                class="px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                title="Buka di VS Code">
+                                <x-icon-editor editor="vscode" />
+                                <span>VS Code</span>
+                            </button>
+                            <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'terminal')"
+                                class="px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                title="Buka Terminal Windows">
+                                <svg class="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <span>Terminal</span>
+                            </button>
+                            <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'explorer')"
+                                class="px-3 py-1.5 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                title="Buka Folder di File Explorer">
+                                <svg class="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                </svg>
+                                <span>Buka Folder</span>
+                            </button>
+                        @else
+                            <span class="text-xs text-amber-600 dark:text-amber-400 font-medium px-2 py-1 bg-amber-500/10 rounded-lg">
+                                💡 Instal proyek untuk membuka di editor
+                            </span>
+                        @endif
                         
                         <!-- Popover Titik 3 -->
                         <div class="relative card-popover-wrapper">
@@ -94,21 +108,30 @@
                             <div id="hero-more-menu"
                                 class="hidden card-popover absolute right-0 top-full mt-1.5 w-48 rounded-xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 shadow-xl z-30 py-1 text-xs divide-y divide-zinc-100 dark:divide-zinc-800">
                                 <div class="py-1">
-                                    <button type="button" onclick="copyToClipboard('{{ addslashes($activeProject->absolute_path) }}')"
-                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                        <span>Salin Path Folder</span>
-                                    </button>
-                                    <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'zed')"
-                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                        <x-icon-editor editor="zed" />
-                                        <span>Zed Editor</span>
-                                    </button>
-                                    <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'antigravity')"
-                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                        <x-icon-editor editor="antigravity" />
-                                        <span>Antigravity IDE</span>
-                                    </button>
+                                    @if(!$isDraft)
+                                        <button type="button" onclick="copyToClipboard('{{ addslashes($activeProject->absolute_path) }}')"
+                                            class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                            <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                            <span>Salin Path Folder</span>
+                                        </button>
+                                        <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'zed')"
+                                            class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                            <x-icon-editor editor="zed" />
+                                            <span>Zed Editor</span>
+                                        </button>
+                                        <button type="button" onclick="openEditor('{{ $activeProject->id }}', 'antigravity')"
+                                            class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                            <x-icon-editor editor="antigravity" />
+                                            <span>Antigravity IDE</span>
+                                        </button>
+                                    @endif
+                                    @if($activeProject->doc_project_id)
+                                        <a href="{{ url('/assistant') }}"
+                                            class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                            <span>Buka Dokumen di Asisten AI</span>
+                                        </a>
+                                    @endif
                                 </div>
                                 <div class="py-1">
                                     <button type="button" onclick="confirmDeleteProject('{{ $activeProject->id }}', '{{ addslashes($activeProject->project_name) }}')"
@@ -122,7 +145,10 @@
                     </div>
                 </div>
 
-                <!-- Konten Utama: Identitas Project & Tombol Primer Buka -->
+                <!-- Stepper Progress 4 Tahap (TASK-M2-03) -->
+                <x-stepper-progress :progress="$activeProject->lifecycle_progress" :needs-reinjection="$activeProject->needsReinjection()" variant="full" />
+
+                <!-- Konten Utama: Identitas Project & Smart Decision Action Button -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
                     <div class="flex items-start gap-3.5 min-w-0">
                         <div class="w-13 h-13 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-2.5 shrink-0 shadow-2xs mt-0.5">
@@ -138,42 +164,64 @@
                                 <span>{{ $activeDb }}</span>
                             </div>
                             
-                            <!-- Minimalist Path Chip (Sama seperti pada kartu Project Saya) -->
+                            <!-- Minimalist Path Chip / Draft Indicator -->
                             <div class="mt-2.5">
-                                <div class="relative group/path inline-flex items-center">
-                                    <button type="button" 
-                                        onclick="copyPathWithFeedback('{{ addslashes($activeProject->absolute_path) }}', this, event)"
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 transition-all cursor-pointer shadow-2xs"
-                                        title="Klik untuk salin path folder">
-                                        <svg class="w-3.5 h-3.5 text-zinc-400 group-hover/path:text-emerald-500 transition-colors shrink-0 path-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                        </svg>
-                                        <span class="path-text text-[11px] font-mono truncate max-w-[280px] text-zinc-500 dark:text-zinc-400">
-                                            {{ basename($activeProject->absolute_path) ?: 'Path' }}
-                                        </span>
-                                    </button>
-
-                                    <!-- Hover Floating Tooltip untuk melihat path lengkap -->
-                                    <div class="pointer-events-none opacity-0 group-hover/path:opacity-100 transition-opacity duration-150 absolute left-0 bottom-full mb-1.5 z-40 whitespace-nowrap bg-zinc-900 dark:bg-zinc-950 text-zinc-200 text-[11px] font-mono px-2.5 py-1 rounded-md shadow-xl border border-zinc-700/60 flex items-center gap-1.5">
-                                        <svg class="w-3 h-3 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                                        </svg>
-                                        <span>{{ $activeProject->absolute_path }}</span>
+                                @if($isDraft)
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 animate-pulse"></span>
+                                        <span class="text-[11px] font-mono">📁 Draft (Belum Diinstal di Komputer)</span>
                                     </div>
-                                </div>
+                                @else
+                                    <div class="relative group/path inline-flex items-center">
+                                        <button type="button" 
+                                            onclick="copyPathWithFeedback('{{ addslashes($activeProject->absolute_path) }}', this, event)"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 transition-all cursor-pointer shadow-2xs"
+                                            title="Klik untuk salin path folder">
+                                            <svg class="w-3.5 h-3.5 text-zinc-400 group-hover/path:text-emerald-500 transition-colors shrink-0 path-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                            </svg>
+                                            <span class="path-text text-[11px] font-mono truncate max-w-[280px] text-zinc-500 dark:text-zinc-400">
+                                                {{ basename($activeProject->absolute_path) ?: 'Path' }}
+                                            </span>
+                                        </button>
+
+                                        <!-- Hover Floating Tooltip untuk melihat path lengkap -->
+                                        <div class="pointer-events-none opacity-0 group-hover/path:opacity-100 transition-opacity duration-150 absolute left-0 bottom-full mb-1.5 z-40 whitespace-nowrap bg-zinc-900 dark:bg-zinc-950 text-zinc-200 text-[11px] font-mono px-2.5 py-1 rounded-md shadow-xl border border-zinc-700/60 flex items-center gap-1.5">
+                                            <svg class="w-3 h-3 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                            </svg>
+                                            <span>{{ $activeProject->absolute_path }}</span>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
 
-                    <!-- Primary Action Button: BUKA PROJECT -->
+                    <!-- Smart Decision Engine Action Button (TASK-M2-04) -->
                     <div class="shrink-0 flex items-center self-start sm:self-center">
-                        <a href="{{ url('/generator') }}"
-                            class="w-full sm:w-auto px-5 py-2.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-semibold rounded-xl text-xs transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer">
-                            <span>Buka Project</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                            </svg>
-                        </a>
+                        @if($nextAction['action_type'] === 'modal_scaffold')
+                            <button type="button" onclick="openScaffoldModal('{{ $activeProject->id }}', '{{ addslashes($activeProject->project_name) }}', '{{ $activeFw }}')"
+                                class="w-full sm:w-auto px-5 py-2.5 bg-[#3ECF8E] hover:bg-[#34b27b] text-zinc-950 font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer group"
+                                title="{{ $nextAction['tooltip'] }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                <span>{{ $nextAction['text'] }}</span>
+                            </button>
+                        @elseif($nextAction['action_type'] === 'open_editor')
+                            <button type="button" onclick="openEditor('{{ $activeProject->id }}', '{{ $nextAction['editor'] ?? 'vscode' }}')"
+                                class="w-full sm:w-auto px-5 py-2.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold rounded-xl text-xs transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                                title="{{ $nextAction['tooltip'] }}">
+                                <span>{{ $nextAction['text'] }}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        @else
+                            <a href="{{ $nextAction['url'] }}"
+                                class="w-full sm:w-auto px-5 py-2.5 {{ $nextAction['re_injection'] ? 'bg-amber-500 hover:bg-amber-600 text-zinc-950 font-bold animate-pulse' : 'bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-bold' }} rounded-xl text-xs transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                                title="{{ $nextAction['tooltip'] }}">
+                                <span>{{ $nextAction['text'] }}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -298,10 +346,12 @@
                                         default => 'SQL'
                                     });
                             $isActive = ($activeProject && $activeProject->id === $proj->id);
+                            $isDraft = $proj->isDraft();
+                            $needsReinjection = $proj->needsReinjection();
                         @endphp
-                        <div class="project-item group relative bg-white dark:bg-[#0c0c0e] border {{ $isActive ? 'border-emerald-500/50 dark:border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-xs' : 'border-zinc-200 dark:border-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700' }} rounded-xl p-4.5 transition-all flex flex-col justify-between min-h-[165px]"
+                        <div class="project-item group relative bg-white dark:bg-[#0c0c0e] border {{ $isActive ? 'border-emerald-500/50 dark:border-emerald-500/40 ring-1 ring-emerald-500/20 shadow-xs' : 'border-zinc-200 dark:border-zinc-800/90 hover:border-zinc-300 dark:hover:border-zinc-700' }} rounded-xl p-4.5 transition-all flex flex-col justify-between min-h-[185px]"
                              data-name="{{ strtolower($proj->project_name) }}"
-                             data-path="{{ strtolower($proj->absolute_path) }}"
+                             data-path="{{ strtolower($proj->absolute_path ?? '') }}"
                              data-status="{{ $isActive ? 'active' : 'standby' }}"
                              data-updated="{{ $proj->updated_at->timestamp }}">
 
@@ -313,9 +363,14 @@
                                             <x-icon-framework :framework="$proj->framework_type" class="w-6 h-6 object-contain" />
                                         </div>
                                         <div class="min-w-0 flex-1">
-                                            <h3 class="font-bold text-sm text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" title="{{ $proj->project_name }}">
-                                                {{ $proj->project_name }}
-                                            </h3>
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <h3 class="font-bold text-sm text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" title="{{ $proj->project_name }}">
+                                                    {{ $proj->project_name }}
+                                                </h3>
+                                                @if($isDraft)
+                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Draft</span>
+                                                @endif
+                                            </div>
                                             <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1.5 truncate">
                                                 <span>{{ $projLabel }}</span>
                                                 <span class="text-zinc-300 dark:text-zinc-700">·</span>
@@ -345,21 +400,34 @@
                                                         <span>Jadikan Sedang Dikerjakan</span>
                                                     </button>
                                                 @endif
-                                                <button type="button" onclick="openEditor('{{ $proj->id }}', 'vscode')"
-                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                                    <x-icon-editor editor="vscode" />
-                                                    <span>Buka di VS Code</span>
-                                                </button>
-                                                <button type="button" onclick="openEditor('{{ $proj->id }}', 'explorer')"
-                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                                    <x-icon-editor editor="explorer" />
-                                                    <span>Buka di File Explorer</span>
-                                                </button>
-                                                <button type="button" onclick="copyToClipboard('{{ addslashes($proj->absolute_path) }}')"
-                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                    <span>Salin Path Folder</span>
-                                                </button>
+                                                @if(!$isDraft)
+                                                    <button type="button" onclick="openEditor('{{ $proj->id }}', 'vscode')"
+                                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                        <x-icon-editor editor="vscode" />
+                                                        <span>Buka di VS Code</span>
+                                                    </button>
+                                                    <button type="button" onclick="openEditor('{{ $proj->id }}', 'terminal')"
+                                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                        <x-icon-editor editor="terminal" />
+                                                        <span>Buka Terminal</span>
+                                                    </button>
+                                                    <button type="button" onclick="openEditor('{{ $proj->id }}', 'explorer')"
+                                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                        <x-icon-editor editor="explorer" />
+                                                        <span>Buka di File Explorer</span>
+                                                    </button>
+                                                    <button type="button" onclick="copyToClipboard('{{ addslashes($proj->absolute_path ?? '') }}')"
+                                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                                        <span>Salin Path Folder</span>
+                                                    </button>
+                                                @else
+                                                    <button type="button" onclick="openScaffoldModal('{{ $proj->id }}', '{{ addslashes($proj->project_name) }}', '{{ $projFw }}')"
+                                                        class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#3ECF8E] font-medium flex items-center gap-2 transition-colors cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                        <span>Instal ke Folder Lokal</span>
+                                                    </button>
+                                                @endif
                                             </div>
                                             <div class="py-1">
                                                 <button type="button" onclick="confirmDeleteProject('{{ $proj->id }}', '{{ addslashes($proj->project_name) }}')"
@@ -372,29 +440,41 @@
                                     </div>
                                 </div>
 
-                                <!-- Middle: Path Bar Sederhana -->
-                                <div class="mt-3">
-                                    <div class="relative group/path inline-flex items-center w-full">
-                                        <button type="button" 
-                                            onclick="copyPathWithFeedback('{{ addslashes($proj->absolute_path) }}', this, event)"
-                                            class="w-full inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 transition-all cursor-pointer shadow-2xs"
-                                            title="Klik untuk salin path folder">
-                                            <svg class="w-3.5 h-3.5 text-zinc-400 group-hover/path:text-emerald-500 transition-colors shrink-0 path-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                            </svg>
-                                            <span class="path-text text-[11px] font-mono truncate text-zinc-500 dark:text-zinc-400">
-                                                {{ basename($proj->absolute_path) ?: 'Path' }}
-                                            </span>
-                                        </button>
+                                <!-- Stepper Progress (TASK-M2-03) -->
+                                <div class="mt-2.5">
+                                    <x-stepper-progress :progress="$proj->lifecycle_progress" :needs-reinjection="$needsReinjection" variant="compact" />
+                                </div>
 
-                                        <!-- Hover Floating Tooltip -->
-                                        <div class="pointer-events-none opacity-0 group-hover/path:opacity-100 transition-opacity duration-150 absolute left-0 bottom-full mb-1.5 z-40 whitespace-nowrap bg-zinc-900 dark:bg-zinc-950 text-zinc-200 text-[11px] font-mono px-2.5 py-1 rounded-md shadow-xl border border-zinc-700/60 flex items-center gap-1.5">
-                                            <svg class="w-3 h-3 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                                            </svg>
-                                            <span>{{ $proj->absolute_path }}</span>
+                                <!-- Middle: Path Bar Sederhana / Draft Notice -->
+                                <div class="mt-2.5">
+                                    @if($isDraft)
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] bg-amber-500/5 text-amber-600 dark:text-amber-400 border border-amber-500/20 w-full">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span class="truncate">Belum diinstal ke folder lokal</span>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="relative group/path inline-flex items-center w-full">
+                                            <button type="button" 
+                                                onclick="copyPathWithFeedback('{{ addslashes($proj->absolute_path) }}', this, event)"
+                                                class="w-full inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:hover:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 border border-zinc-200/80 dark:border-zinc-800 transition-all cursor-pointer shadow-2xs"
+                                                title="Klik untuk salin path folder">
+                                                <svg class="w-3.5 h-3.5 text-zinc-400 group-hover/path:text-emerald-500 transition-colors shrink-0 path-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                                <span class="path-text text-[11px] font-mono truncate text-zinc-500 dark:text-zinc-400">
+                                                    {{ basename($proj->absolute_path) ?: 'Path' }}
+                                                </span>
+                                            </button>
+
+                                            <!-- Hover Floating Tooltip -->
+                                            <div class="pointer-events-none opacity-0 group-hover/path:opacity-100 transition-opacity duration-150 absolute left-0 bottom-full mb-1.5 z-40 whitespace-nowrap bg-zinc-900 dark:bg-zinc-950 text-zinc-200 text-[11px] font-mono px-2.5 py-1 rounded-md shadow-xl border border-zinc-700/60 flex items-center gap-1.5">
+                                                <svg class="w-3 h-3 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                                </svg>
+                                                <span>{{ $proj->absolute_path }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -412,7 +492,14 @@
                                 </div>
 
                                 <div>
-                                    @if($isActive)
+                                    @if($isDraft)
+                                        <button type="button" onclick="openScaffoldModal('{{ $proj->id }}', '{{ addslashes($proj->project_name) }}', '{{ $projFw }}')"
+                                            class="px-3.5 py-1.5 bg-[#3ECF8E] hover:bg-[#34b27b] text-zinc-950 font-bold rounded-lg text-xs transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                                            title="Instal project ke folder komputer">
+                                            <span>Instal</span>
+                                            <span class="text-[10px]">⚡</span>
+                                        </button>
+                                    @elseif($isActive)
                                         <a href="{{ url('/generator') }}"
                                             class="px-3.5 py-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-semibold rounded-lg text-xs shadow-2xs transition-colors flex items-center gap-1 cursor-pointer">
                                             <span>Buka Project</span>
@@ -455,10 +542,12 @@
                                         default => 'SQL'
                                     });
                             $isActive = ($activeProject && $activeProject->id === $proj->id);
+                            $isDraft = $proj->isDraft();
+                            $needsReinjection = $proj->needsReinjection();
                         @endphp
                         <div class="project-item bg-white dark:bg-[#0c0c0e] border {{ $isActive ? 'border-zinc-200 dark:border-zinc-800 border-l-4 border-l-emerald-500 dark:border-l-emerald-500' : 'border-zinc-200 dark:border-zinc-800' }} rounded-xl p-4 shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                              data-name="{{ strtolower($proj->project_name) }}"
-                             data-path="{{ strtolower($proj->absolute_path) }}"
+                             data-path="{{ strtolower($proj->absolute_path ?? '') }}"
                              data-status="{{ $isActive ? 'active' : 'standby' }}"
                              data-updated="{{ $proj->updated_at->timestamp }}">
 
@@ -475,6 +564,9 @@
                                         <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
                                             {{ $projLabel }} · {{ $dbDialect }}
                                         </span>
+                                        @if($isDraft)
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Draft</span>
+                                        @endif
                                         @if($isActive)
                                             <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-900 dark:text-white">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
@@ -482,15 +574,31 @@
                                             </span>
                                         @endif
                                     </div>
-                                    <div class="text-[11px] font-mono text-zinc-400 dark:text-zinc-500 truncate mt-0.5" title="{{ $proj->absolute_path }}">
-                                        {{ $proj->absolute_path }}
+                                    <div class="flex items-center gap-3 mt-1.5">
+                                        <x-stepper-progress :progress="$proj->lifecycle_progress" :needs-reinjection="$needsReinjection" variant="compact" />
+                                        @if(!$isDraft)
+                                            <span class="text-[11px] font-mono text-zinc-400 dark:text-zinc-500 truncate" title="{{ $proj->absolute_path }}">
+                                                {{ $proj->absolute_path }}
+                                            </span>
+                                        @else
+                                            <span class="text-[11px] text-amber-600 dark:text-amber-400">
+                                                (Belum diinstal ke folder komputer)
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Right: Action Buttons -->
                             <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                                @if($isActive)
+                                @if($isDraft)
+                                    <button type="button" onclick="openScaffoldModal('{{ $proj->id }}', '{{ addslashes($proj->project_name) }}', '{{ $projFw }}')"
+                                        class="px-3.5 py-1.5 bg-[#3ECF8E] hover:bg-[#34b27b] text-zinc-950 font-bold rounded-lg text-xs shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                                        title="Instal project ke folder komputer">
+                                        <span>Instal</span>
+                                        <span class="text-[10px]">⚡</span>
+                                    </button>
+                                @elseif($isActive)
                                     <a href="{{ url('/generator') }}"
                                         class="px-3.5 py-1.5 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 font-semibold rounded-lg text-xs shadow-2xs transition-colors flex items-center gap-1 cursor-pointer">
                                         <span>Buka Project</span>
@@ -517,21 +625,34 @@
                                     <div id="list-menu-{{ $proj->id }}"
                                         class="hidden card-popover absolute right-0 top-full mt-1 w-48 rounded-xl bg-white dark:bg-[#121215] border border-zinc-200 dark:border-zinc-800 shadow-xl z-30 py-1 text-xs divide-y divide-zinc-100 dark:divide-zinc-800">
                                         <div class="py-1">
-                                            <button type="button" onclick="openEditor('{{ $proj->id }}', 'vscode')"
-                                                class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                                <x-icon-editor editor="vscode" />
-                                                <span>Buka di VS Code</span>
-                                            </button>
-                                            <button type="button" onclick="openEditor('{{ $proj->id }}', 'explorer')"
-                                                class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                                <x-icon-editor editor="explorer" />
-                                                <span>Buka di File Explorer</span>
-                                            </button>
-                                            <button type="button" onclick="copyToClipboard('{{ addslashes($proj->absolute_path) }}')"
-                                                class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
-                                                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                <span>Salin Path Folder</span>
-                                            </button>
+                                            @if(!$isDraft)
+                                                <button type="button" onclick="openEditor('{{ $proj->id }}', 'vscode')"
+                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                    <x-icon-editor editor="vscode" />
+                                                    <span>Buka di VS Code</span>
+                                                </button>
+                                                <button type="button" onclick="openEditor('{{ $proj->id }}', 'terminal')"
+                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                    <x-icon-editor editor="terminal" />
+                                                    <span>Buka Terminal</span>
+                                                </button>
+                                                <button type="button" onclick="openEditor('{{ $proj->id }}', 'explorer')"
+                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                    <x-icon-editor editor="explorer" />
+                                                    <span>Buka di File Explorer</span>
+                                                </button>
+                                                <button type="button" onclick="copyToClipboard('{{ addslashes($proj->absolute_path ?? '') }}')"
+                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                                    <span>Salin Path Folder</span>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="openScaffoldModal('{{ $proj->id }}', '{{ addslashes($proj->project_name) }}', '{{ $projFw }}')"
+                                                    class="w-full text-left px-3 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#3ECF8E] font-medium flex items-center gap-2 transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                    <span>Instal ke Folder Lokal</span>
+                                                </button>
+                                            @endif
                                         </div>
                                         <div class="py-1">
                                             <button type="button" onclick="confirmDeleteProject('{{ $proj->id }}', '{{ addslashes($proj->project_name) }}')"

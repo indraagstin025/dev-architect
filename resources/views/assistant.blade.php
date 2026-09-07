@@ -43,6 +43,16 @@
 
         <!-- Right: Minimalist Canvas Toggle & Quick Actions -->
         <div class="flex items-center gap-1.5 shrink-0 z-20">
+            <!-- Quick button to promote to Dashboard Project (TASK-M2-01) -->
+            <button type="button" id="btn-promote-dashboard" onclick="createDashboardProject()"
+                    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
+                    title="Jadikan ide ini sebagai Proyek di Dashboard (Bisa diinstal kapan saja)">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>+ Jadikan Proyek di Dashboard</span>
+            </button>
+
             <!-- Minimalist Canvas Toggle Icon Button with Badge & Tooltip -->
             <button type="button" id="btn-toggle-canvas" onclick="toggleCanvas()"
                     class="relative w-8 h-8 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center shadow-xs transition-all active:scale-95 shrink-0"
@@ -62,7 +72,26 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
                     </svg>
                 </button>
-                <div id="project-menu-pop" class="hidden absolute right-0 mt-1.5 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-1.5 space-y-1 z-30">
+                <div id="project-menu-pop" class="hidden absolute right-0 mt-1.5 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-1.5 space-y-1 z-30">
+                    <button type="button" onclick="createDashboardProject()" class="w-full px-2.5 py-1.5 text-left text-xs rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium transition-colors">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Jadikan Proyek di Dashboard</span>
+                    </button>
+                    <button type="button" onclick="archiveDocChatSession()" class="w-full px-2.5 py-1.5 text-left text-xs rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h2.586a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
+                        </svg>
+                        <span>Arsipkan Obrolan Ini</span>
+                    </button>
+                    <button type="button" onclick="exportDocTranscript()" class="w-full px-2.5 py-1.5 text-left text-xs rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors">
+                        <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Ekspor Transkrip (.md)</span>
+                    </button>
+                    <div class="border-t border-zinc-100 dark:border-zinc-800 my-1"></div>
                     <button type="button" onclick="archiveDocProject()" class="w-full px-2.5 py-1.5 text-left text-xs rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors">
                         <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -170,7 +199,19 @@
 
                     <!-- Message Feed (Shown when project has messages) -->
                     <div id="chat-messages" class="hidden space-y-6 pb-6 w-full">
-                        <!-- Message Bubbles Rendered by doc-assistant.js -> renderMessages() -->
+                        <!-- Load Older Messages Button (TASK-M2-06 Lazy Loading) -->
+                        <div id="load-more-messages-container" class="hidden text-center py-1">
+                            <button type="button" id="btn-load-more-messages" onclick="loadOlderMessages()"
+                                    class="px-3.5 py-1.5 rounded-full text-xs font-medium border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-2xs transition-colors inline-flex items-center gap-2 cursor-pointer">
+                                <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                </svg>
+                                <span>Muat 20 Pesan Sebelumnya</span>
+                            </button>
+                        </div>
+                        <div id="chat-messages-stream" class="space-y-6 w-full">
+                            <!-- Message Bubbles Rendered by doc-assistant.js -> renderMessages() -->
+                        </div>
                     </div>
                 </div>
             </div>

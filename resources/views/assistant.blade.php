@@ -77,7 +77,7 @@
                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        <span>Jadikan Proyek di Dashboard</span>
+                        <span id="menu-promote-dashboard-text">Jadikan Proyek di Dashboard</span>
                     </button>
                     <button type="button" onclick="archiveDocChatSession()" class="w-full px-2.5 py-1.5 text-left text-xs rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2 text-zinc-700 dark:text-zinc-300 transition-colors">
                         <svg class="w-3.5 h-3.5 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

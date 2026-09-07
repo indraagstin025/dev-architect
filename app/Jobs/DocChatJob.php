@@ -73,10 +73,52 @@ class DocChatJob implements ShouldQueue
             'job_error' => null,
         ]);
 
+        // TASK-M2-07: Perbarui rolling context summary jika percakapan aktif > 10 pesan
+        $this->updateRollingSummaryIfNeeded($project);
+
         try {
             $notificationService->notifySchemaGenerated($project->title, 1, 'Asisten Dokumen');
         } catch (Throwable $e) {
             Log::warning('Gagal memicu notifikasi desktop: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Memperbarui ringkasan bergulir (Rolling Context Summary) untuk pesan-pesan lama
+     * di luar jendela 10 pesan terbaru agar AI tidak amnesia tanpa membakar token (TASK-M2-07).
+     */
+    protected function updateRollingSummaryIfNeeded(\App\Models\DocProject $project): void
+    {
+        try {
+            $activeCount = $project->messages()
+                ->where('is_archived', false)
+                ->where('job_status', 'ready')
+                ->count();
+
+            if ($activeCount > 10) {
+                // Ambil pesan di luar 10 pesan terakhir
+                $olderMessages = $project->messages()
+                    ->where('is_archived', false)
+                    ->where('job_status', 'ready')
+                    ->orderBy('created_at', 'desc')
+                    ->skip(10)
+                    ->take(15)
+                    ->get()
+                    ->reverse();
+
+                if ($olderMessages->isNotEmpty()) {
+                    $summaryLines = [];
+                    foreach ($olderMessages as $msg) {
+                        $role = $msg->role === 'user' ? 'User' : 'AI';
+                        $snippet = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', (string) $msg->content)), 120);
+                        $summaryLines[] = "- {$role}: {$snippet}";
+                    }
+                    $newSummary = implode("\n", $summaryLines);
+                    $project->update(['context_summary' => $newSummary]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal memperbarui rolling context summary: ' . $e->getMessage());
         }
     }
 
@@ -95,7 +137,7 @@ class DocChatJob implements ShouldQueue
     }
 
     /**
-     * Susun konteks: instruksi (ID, Q1, Q8) + brief + versi approved + N pesan terakhir.
+     * Susun konteks: instruksi (ID, Q1, Q8) + brief + versi approved + rolling summary + N pesan terakhir.
      *
      * @return array<int, array{role: string, content: string}>
      */
@@ -118,15 +160,29 @@ class DocChatJob implements ShouldQueue
             $messages[] = ['role' => 'system', 'content' => "BRIEF PROYEK '{$project->title}':\n" . $project->description];
         }
 
-        $approved = $project->versions()
-            ->where('status', 'approved')
-            ->orderBy('created_at')
-            ->get(['doc_type', 'version', 'content_markdown']);
+        // Tier 1: Lembar Dokumen Canvas sebagai Single Source of Truth (SSOT) permanen
+        $versions = $project->versions()
+            ->orderBy('version_num', 'desc')
+            ->take(3)
+            ->get();
 
-        foreach ($approved as $version) {
+        if ($versions->isNotEmpty()) {
+            foreach ($versions->reverse() as $ver) {
+                $statusLabel = $ver->status === 'approved' ? 'APPROVED' : 'AKTIF / DRAFT';
+                $messages[] = [
+                    'role' => 'system',
+                    'content' => "LEMBAR DOKUMEN SISTEM SAAT INI (SINGLE SOURCE OF TRUTH / CANVAS - {$statusLabel}):\n"
+                        . "Tipe: " . strtoupper((string) $ver->doc_type) . " v{$ver->version_num} ({$ver->title})\n"
+                        . $ver->content_markdown,
+                ];
+            }
+        }
+
+        // Tier 3: Rolling Context Summary (ringkasan padat percakapan lama di luar 10 pesan)
+        if (! empty($project->context_summary)) {
             $messages[] = [
                 'role' => 'system',
-                'content' => "DOKUMEN " . strtoupper($version->doc_type) . " v{$version->version} (APPROVED, JANGAN UBAH FAKTANYA):\n" . $version->content_markdown,
+                'content' => "RINGKASAN KONTEKS DISKUSI SEBELUMNYA (ROLLING CONTEXT SUMMARY):\n" . $project->context_summary,
             ];
         }
 
@@ -150,10 +206,12 @@ class DocChatJob implements ShouldQueue
             }
         }
 
+        // Tier 2: Sliding Context Window (10 pesan percakapan aktif terakhir yang belum diarsipkan)
         $history = $project->messages()
             ->where('id', '!=', $current->id)
+            ->where('is_archived', false)
             ->where('job_status', '!=', 'failed')
-            ->orderBy('created_at', 'desc')
+            ->reorder('created_at', 'desc')
             ->limit(10)
             ->get(['role', 'content'])
             ->reverse();

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('project_name');
-            $table->text('absolute_path');
-            $table->string('framework_type')->default('laravel');
+            $table->string('absolute_path', 500)->unique();
+            $table->string('framework_type')->default('laravel')->index();
             $table->timestamps();
         });
     }

@@ -24,6 +24,7 @@ class DocProject extends Model
         'description',
         'target_framework',
         'stage',
+        'context_summary',
         'ai_model',
         'status',
         'code_project_id',
@@ -37,6 +38,38 @@ class DocProject extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(DocMessage::class, 'doc_project_id')->orderBy('created_at');
+    }
+
+    /**
+     * Mengarsipkan obrolan saat ini sehingga ruang chat bersih untuk topik baru,
+     * namun dokumen yang sudah di-approve di Canvas tetap terjaga (TASK-M2-08).
+     */
+    public function archiveCurrentChat(): int
+    {
+        return $this->messages()
+            ->where('is_archived', false)
+            ->update(['is_archived' => true]);
+    }
+
+    /**
+     * Mengambil transkrip seluruh obrolan dalam format Markdown (TASK-M2-09).
+     */
+    public function getTranscriptMarkdown(): string
+    {
+        $messages = $this->messages()->orderBy('created_at')->get();
+        $md = "# Transkrip Diskusi Arsitektur: {$this->title}\n";
+        $md .= "*Diekspor dari DEVArchitect pada " . now()->format('Y-m-d H:i:s') . "*\n\n";
+        $md .= "---\n\n";
+
+        foreach ($messages as $msg) {
+            $sender = $msg->role === 'user' ? '👤 Pengguna' : '🤖 Asisten DEVArchitect';
+            $time = $msg->created_at ? $msg->created_at->format('Y-m-d H:i:s') : '';
+            $status = $msg->is_archived ? ' *(Diarsipkan)*' : '';
+            $md .= "### {$sender} ({$time}){$status}\n\n";
+            $md .= trim((string)$msg->content) . "\n\n---\n\n";
+        }
+
+        return $md;
     }
 
     public function versions(): HasMany
